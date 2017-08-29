@@ -2,6 +2,13 @@
 
 This fork has been created so I can modify, compile it with MinGW gcc and use it in eclipse.
 
+The eclipse project files are included so you can impot it into your workspace. Be aware though that
+the gcc version used to compile this project is not the "default" version I have on my system, and so
+the MINGW_HOME environment variable has been changed in the project. You may have to restore it to your
+default value.
+
+The gcc version used to compile this code is v6.1.0 and the c++11 dialect flag has been used.
+
 Di4l
 
 The original text for this project is found below:
