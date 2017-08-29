@@ -1,3 +1,11 @@
+# MinGW_port
+
+This fork has been created so I can modify, compile it with MinGW gcc and use it in eclipse.
+
+Di4l
+
+The original text for this project is found below:
+
 # videos
 OneLoneCoder One Off Programs
 
