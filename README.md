@@ -2,6 +2,8 @@
 
 This fork has been created so I can modify, compile it with MinGW gcc and use it in eclipse.
 
+I have remove the application projects from here as I am only interested (so far) in the engine.
+
 The eclipse project files are included so you can impot it into your workspace. Be aware though that
 the gcc version used to compile this project is not the "default" version I have on my system, and so
 the MINGW_HOME environment variable has been changed in the project. You may have to restore it to your
@@ -11,17 +13,8 @@ The gcc version used to compile this code is v6.1.0 and the c++11 dialect flag h
 
 Di4l
 
-The original text for this project is found below:
+# Thank you Javidx9
+The original engine (with several neat projects) can be found here: https://github.com/OneLoneCoder/videos
 
-# videos
-OneLoneCoder One Off Programs
-
-Hello!
-
-This repo contains all of the source files to the videos on my youtube channel!
-
-www.youtube.com/javidx9
-
-Enjoy them as you see fit, but if you find the content useful, spread the word, give me a shout out, help me out!
-
-Jx9
+I would like to take the opotunity to thank Jx9 for making his work available to everyone and for his
+tutorials in youtube.
