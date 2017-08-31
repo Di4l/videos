@@ -77,8 +77,6 @@ See my other videos for examples!
 
 #include <windows.h>
 //-----------------------------------------------------------------------------
-using namespace std;
-//-----------------------------------------------------------------------------
 
 enum COLOUR
 {
@@ -133,9 +131,9 @@ private:
 	void Create(int w, int h);
 
 public:
-	olcSprite()	             {}
-	olcSprite(int w, int h)  { Create(w, h); }
-	olcSprite(wstring sFile) { if(!Load(sFile)) Create(8, 8); }
+	olcSprite()	                  {}
+	olcSprite(int w, int h)       { Create(w, h); }
+	olcSprite(std::wstring sFile) { if(!Load(sFile)) Create(8, 8); }
 
 	int nWidth = 0;
 	int nHeight = 0;
@@ -146,8 +144,8 @@ public:
 	wchar_t GetGlyph(int x, int y);
 	short   GetColour(int x, int y);
 
-	bool    Save(wstring sFile);
-	bool    Load(wstring sFile);
+	bool    Save(std::wstring sFile);
+	bool    Load(std::wstring sFile);
 };
 //-----------------------------------------------------------------------------
 
@@ -167,10 +165,10 @@ protected:
 	int                        m_nScreenWidth;
 	int                        m_nScreenHeight;
 	CHAR_INFO*                 m_bufScreen;
-	atomic<bool>               m_bAtomActive;
-	condition_variable         m_cvGameFinished;
-	mutex                      m_muxGame;
-	wstring                    m_sAppName;
+	std::atomic<bool>          m_bAtomActive;
+	std::condition_variable    m_cvGameFinished;
+	std::mutex                 m_muxGame;
+	std::wstring               m_sAppName;
 
 	struct sKeyState
 	{
@@ -192,8 +190,8 @@ public:
 	int ConstructConsole(int width, int height, int fontw = 12, int fonth = 12);
 
 	void Draw(int x, int y, wchar_t c = 0x2588, short col = 0x000F);
-	void DrawString(int x, int y, wstring c, short col = 0x000F);
-	void DrawStringAlpha(int x, int y, wstring c, short col = 0x000F);
+	void DrawString(int x, int y, std::wstring c, short col = 0x000F);
+	void DrawStringAlpha(int x, int y, std::wstring c, short col = 0x000F);
 	void DrawLine(int x1, int y1, int x2, int y2, wchar_t c = 0x2588, short col = 0x000F);
 	void DrawSprite(int x, int y, olcSprite *sprite);
 	void DrawPartialSprite(int x, int y, olcSprite *sprite, int ox, int oy, int w, int h);
