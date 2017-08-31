@@ -2,7 +2,6 @@
 #include "olcConsoleGameEngine.h"
 
 #include <cwchar>
-#include <iostream>
 #include <fstream>
 #include <chrono>
 #include <vector>
@@ -118,7 +117,6 @@ olcConsoleGameEngine::olcConsoleGameEngine()
 	m_nScreenHeight = 30;
 
 	m_hOriginalConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-//	m_hConsole         = m_hOriginalConsole;
 	m_hConsole         = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
 										0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	m_keyNewState      = new short[256];
@@ -206,8 +204,7 @@ int olcConsoleGameEngine::Error(wchar_t *msg)
 {
 	wchar_t buf[256];
 	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, 256, NULL);
-//	SetConsoleActiveScreenBuffer(m_hOriginalConsole);
-	wprintf(L"[ERROR] %s: %s\n", msg, buf);
+	wprintf(L"[ERROR] %ls: %ls\n", msg, buf);
 
 	wstring txt(msg);
 	txt += wstring(L":\n") + wstring(buf);
@@ -218,8 +215,9 @@ int olcConsoleGameEngine::Error(wchar_t *msg)
 
 int olcConsoleGameEngine::ConstructConsole(int width, int height, int fontw, int fonth)
 {
-//	if(INVALID_HANDLE_VALUE == m_hConsole)
-//		return Error(L"CreateConsoleScreenBuffer");
+	if(INVALID_HANDLE_VALUE == m_hConsole)
+		return Error(L"CreateConsoleScreenBuffer");
+
 	m_nScreenWidth  = width;
 	m_nScreenHeight = height;
 
