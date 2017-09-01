@@ -1,3 +1,14 @@
+//---------------------------------------------------------------------------//
+//  Adapting the "snake" project by javidx9 to this game engine by the same
+//  author I have come to realize that adding a delay on the game loop becomes
+//  a problem on detecting key presses.
+//
+//  option 1: Added a parameter on the engine that allow for a delay between
+//  calls to the main loop to be inserted. That "delay" time is spent checking
+//  for user input (keys pressed)
+//---------------------------------------------------------------------------//
+
+
 //-----------------------------------------------------------------------------
 #include "olcConsoleGameEngine.h"
 
@@ -125,6 +136,7 @@ olcConsoleGameEngine::olcConsoleGameEngine()
 	m_keyOldState      = new short[256];
 	m_bufScreen        = nullptr;
 	m_sAppName         = L"Default";
+	m_LoopDelay        = std::chrono::milliseconds::zero();
 
 	memset(m_keyNewState, 0, 256 * sizeof(short));
 	memset(m_keyOldState, 0, 256 * sizeof(short));
@@ -150,50 +162,56 @@ void olcConsoleGameEngine::GameThread()
 	if (!OnUserCreate())
 		return;
 
-	auto tp1 = chrono::system_clock::now();
-	auto tp2 = chrono::system_clock::now();
 	wchar_t s[128];
+	auto    tp1 = chrono::system_clock::now();
+	auto    tp2 = tp1;
+	float   fEtime = 0.0;
+	chrono::duration<float> dEtime;
 
 	// Run as fast as possible
-	while (m_bAtomActive)
+	while(m_bAtomActive)
 	{
 		// Handle Timing
 		tp2 = chrono::system_clock::now();
-		chrono::duration<float> elapsedTime = tp2 - tp1;
-		tp1 = tp2;
-		float fElapsedTime = elapsedTime.count();
 
 		// Handle Input
-		for(int i = 0; i < 256; ++i)
+		memset(m_keys, 0, 256 * sizeof(sKeyState));
+		do
 		{
-			m_keyNewState[i] = GetAsyncKeyState(i);
-
-			m_keys[i].bPressed  = false;
-			m_keys[i].bReleased = false;
-
-			if (m_keyNewState[i] != m_keyOldState[i])
+			for(int i = 0; i < 256; ++i)
 			{
-				if (m_keyNewState[i] & 0x8000)
+				m_keyNewState[i] = GetAsyncKeyState(i);
+//				m_keys[i].bPressed  = false;
+//				m_keys[i].bReleased = false;
+				if(m_keyNewState[i] != m_keyOldState[i])
 				{
-					m_keys[i].bPressed = !m_keys[i].bHeld;
-					m_keys[i].bHeld    = true;
+					if(m_keyNewState[i] & 0x8000)
+					{
+						m_keys[i].bPressed = true;//!m_keys[i].bHeld;
+						m_keys[i].bHeld    = true;
+					}
+					else
+					{
+						m_keys[i].bReleased = true;
+						m_keys[i].bHeld     = false;
+					}
 				}
-				else
-				{
-					m_keys[i].bReleased = true;
-					m_keys[i].bHeld     = false;
-				}
+				m_keyOldState[i] = m_keyNewState[i];
 			}
+		} while((std::chrono::system_clock::now() - tp2) < m_LoopDelay);
 
-			m_keyOldState[i] = m_keyNewState[i];
-		}
+		// Calculate the time elapsed since last frame
+		tp2    = chrono::system_clock::now();
+		dEtime = tp2 - tp1;
+		tp1    = tp2;
+		fEtime = dEtime.count();
 
 		// Handle Frame Update
-		if(!OnUserUpdate(fElapsedTime))
+		if(!OnUserUpdate(fEtime, m_LoopDelay))
 			m_bAtomActive = false;
 
 		// Update Title & Present Screen Buffer
-		swprintf_s(s, 128, L"OneLoneCoder.com - Console Game Engine - %s - FPS: %3.2f ", m_sAppName.c_str(), 1.0f / fElapsedTime);
+		swprintf_s(s, 128, L"OneLoneCoder.com - Console Game Engine - %s - FPS: %3.2f ", m_sAppName.c_str(), 1.0f / fEtime);
 		SetConsoleTitleW(s);
 		WriteConsoleOutputW(m_hConsole, m_bufScreen, { (short)m_nScreenWidth, (short)m_nScreenHeight }, { 0,0 }, &m_rectWindow);
 	}

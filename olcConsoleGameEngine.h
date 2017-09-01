@@ -74,6 +74,7 @@ See my other videos for examples!
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <chrono>
 
 #include <windows.h>
 //-----------------------------------------------------------------------------
@@ -158,6 +159,7 @@ private:
 	SMALL_RECT                 m_rectWindow;
 	short*                     m_keyOldState;
 	short*                     m_keyNewState;
+	std::chrono::milliseconds  m_LoopDelay;
 
 	void GameThread();
 
@@ -202,6 +204,6 @@ public:
 
 	// User MUST OVERRIDE THESE!!
 	virtual bool OnUserCreate() = 0;
-	virtual bool OnUserUpdate(float fElapsedTime) = 0;	
+	virtual bool OnUserUpdate(float fElapsedTime, std::chrono::milliseconds& loopDelay) = 0;
 };
 //-----------------------------------------------------------------------------
