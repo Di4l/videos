@@ -19,7 +19,10 @@
 #include <list>
 #include <thread>
 //-----------------------------------------------------------------------------
-using namespace std;
+#include <filesystem>
+
+#define S2WS(x)		std::filesystem::path(x).wstring()
+#define WS2S(x)		std::filesystem::path(x).string()
 //-----------------------------------------------------------------------------
 
 void olcSprite::Create(int w, int h)
@@ -38,7 +41,7 @@ void olcSprite::Create(int w, int h)
 
 void olcSprite::SetGlyph(int x, int y, wchar_t c)
 {
-	if (x <0 or x > nWidth or y < 0 or y > nHeight)
+	if (x < 0 || x > nWidth || y < 0 || y > nHeight)
 		return;
 	else
 		m_Glyphs[y * nWidth + x] = c;
@@ -47,7 +50,7 @@ void olcSprite::SetGlyph(int x, int y, wchar_t c)
 
 void olcSprite::SetColour(int x, int y, short c)
 {
-	if (x <0 or x > nWidth or y < 0 or y > nHeight)
+	if (x <0 || x > nWidth || y < 0 || y > nHeight)
 		return;
 	else
 		m_Colours[y * nWidth + x] = c;
@@ -56,7 +59,7 @@ void olcSprite::SetColour(int x, int y, short c)
 
 wchar_t olcSprite::GetGlyph(int x, int y)
 {
-	if (x <0 or x > nWidth or y < 0 or y > nHeight)
+	if (x <0 || x > nWidth || y < 0 || y > nHeight)
 		return L' ';
 	else
 		return m_Glyphs[y * nWidth + x];
@@ -65,18 +68,18 @@ wchar_t olcSprite::GetGlyph(int x, int y)
 
 short olcSprite::GetColour(int x, int y)
 {
-	if (x <0 or x > nWidth or y < 0 or y > nHeight)
+	if (x <0 || x > nWidth || y < 0 || y > nHeight)
 		return FG_BLACK;
 	else
 		return m_Colours[y * nWidth + x];
 }
 //-----------------------------------------------------------------------------
 
-bool olcSprite::Save(wstring sFile)
+bool olcSprite::Save(std::wstring sFile)
 {
-	string aux(sFile.begin(), sFile.end());
-	ofstream f;
-	f.open(aux.c_str(), ios_base::binary);
+	std::string aux = WS2S(sFile);
+	std::ofstream f;
+	f.open(aux.c_str(), std::ios_base::binary);
 
 	f.write((char*)&nWidth, sizeof(int));
 	f.write((char*)&nHeight, sizeof(int));
@@ -88,16 +91,16 @@ bool olcSprite::Save(wstring sFile)
 }
 //-----------------------------------------------------------------------------
 
-bool olcSprite::Load(wstring sFile)
+bool olcSprite::Load(std::wstring sFile)
 {
 	delete[] m_Glyphs;
 	delete[] m_Colours;
 	nWidth = 0;
 	nHeight = 0;
 
-	string aux(sFile.begin(), sFile.end());
-	ifstream f;
-	f.open(aux.c_str(), ios_base::binary | ios_base::trunc);
+	std::string aux = WS2S(sFile);
+	std::ifstream f;
+	f.open(aux.c_str(), std::ios_base::binary | std::ios_base::trunc);
 
 	f.read((char*)&nWidth, sizeof(int));
 	f.read((char*)&nHeight, sizeof(int));
@@ -125,18 +128,16 @@ bool olcSprite::Load(wstring sFile)
 //-----------------------------------------------------------------------------
 
 olcConsoleGameEngine::olcConsoleGameEngine()
+	: m_nScreenWidth(80)
+	, m_nScreenHeight(30)
+	, m_bufScreen(nullptr)
+	, m_sAppName(L"Default")
 {
-	m_nScreenWidth  = 80;
-	m_nScreenHeight = 30;
-
 	m_hOriginalConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	m_hConsole         = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE,
 										0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
 	m_keyNewState      = new short[256];
 	m_keyOldState      = new short[256];
-	m_bufScreen        = nullptr;
-	m_sAppName         = L"Default";
-	m_LoopDelay        = std::chrono::milliseconds::zero();
 
 	memset(m_keyNewState, 0, 256 * sizeof(short));
 	memset(m_keyOldState, 0, 256 * sizeof(short));
@@ -163,51 +164,26 @@ void olcConsoleGameEngine::GameThread()
 		return;
 
 	wchar_t s[128];
-	auto    tp1 = chrono::system_clock::now();
-	auto    tp2 = tp1;
+	std::chrono::system_clock::time_point tp1;
+	auto    tp2    = std::chrono::system_clock::now();
 	float   fEtime = 0.0;
-	chrono::duration<float> dEtime;
 
 	// Run as fast as possible
 	while(m_bAtomActive)
 	{
 		// Handle Timing
-		tp2 = chrono::system_clock::now();
-
-		// Handle Input
-		memset(m_keys, 0, 256 * sizeof(sKeyState));
-		do
-		{
-			for(int i = 0; i < 256; ++i)
-			{
-				m_keyNewState[i] = GetAsyncKeyState(i);
-//				m_keys[i].bPressed  = false;
-//				m_keys[i].bReleased = false;
-				if(m_keyNewState[i] != m_keyOldState[i])
-				{
-					if(m_keyNewState[i] & 0x8000)
-					{
-						m_keys[i].bPressed = true;//!m_keys[i].bHeld;
-						m_keys[i].bHeld    = true;
-					}
-					else
-					{
-						m_keys[i].bReleased = true;
-						m_keys[i].bHeld     = false;
-					}
-				}
-				m_keyOldState[i] = m_keyNewState[i];
-			}
-		} while((std::chrono::system_clock::now() - tp2) < m_LoopDelay);
-
-		// Calculate the time elapsed since last frame
-		tp2    = chrono::system_clock::now();
-		dEtime = tp2 - tp1;
 		tp1    = tp2;
-		fEtime = dEtime.count();
+		tp2    = std::chrono::system_clock::now();
+		fEtime = std::chrono::duration<float>(tp2 - tp1).count();
+
+		// Handle keyboard input
+		handleKeyboardInput();
+
+		// Handle Mouse Input - Check for window events
+		handleMouseInput();
 
 		// Handle Frame Update
-		if(!OnUserUpdate(fEtime, m_LoopDelay))
+		if(!OnUserUpdate(fEtime))
 			m_bAtomActive = false;
 
 		// Update Title & Present Screen Buffer
@@ -220,14 +196,119 @@ void olcConsoleGameEngine::GameThread()
 }
 //-----------------------------------------------------------------------------
 
+void olcConsoleGameEngine::handleKeyboardInput()
+{
+	// Handle Keyboard Input
+	for (int i = 0; i < 256; i++)
+	{
+		m_keyNewState[i] = GetAsyncKeyState(i);
+
+		m_keys[i].bPressed = false;
+		m_keys[i].bReleased = false;
+
+		if (m_keyNewState[i] != m_keyOldState[i])
+		{
+			if (m_keyNewState[i] & 0x8000)
+			{
+				m_keys[i].bPressed = !m_keys[i].bHeld;
+				m_keys[i].bHeld = true;
+			}
+			else
+			{
+				m_keys[i].bReleased = true;
+				m_keys[i].bHeld = false;
+			}
+		}
+
+		m_keyOldState[i] = m_keyNewState[i];
+	}
+}
+//-----------------------------------------------------------------------------
+
+void olcConsoleGameEngine::handleMouseInput()
+{
+	//// Handle Mouse Input - Check for window events
+	//INPUT_RECORD inBuf[32];
+	//DWORD events = 0;
+	//GetNumberOfConsoleInputEvents(m_hConsoleIn, &events);
+	//if (events > 0)
+	//	ReadConsoleInput(m_hConsoleIn, inBuf, events, &events);
+
+	//// Handle events - we only care about mouse clicks and movement
+	//// for now
+	//for (DWORD i = 0; i < events; i++)
+	//{
+	//	switch (inBuf[i].EventType)
+	//	{
+	//	case FOCUS_EVENT:
+	//	{
+	//		m_bConsoleInFocus = inBuf[i].Event.FocusEvent.bSetFocus;
+	//	}
+	//	break;
+
+	//	case MOUSE_EVENT:
+	//	{
+	//		switch (inBuf[i].Event.MouseEvent.dwEventFlags)
+	//		{
+	//		case MOUSE_MOVED:
+	//		{
+	//			m_mousePosX = inBuf[i].Event.MouseEvent.dwMousePosition.X;
+	//			m_mousePosY = inBuf[i].Event.MouseEvent.dwMousePosition.Y;
+	//		}
+	//		break;
+
+	//		case 0:
+	//		{
+	//			for (int m = 0; m < 5; m++)
+	//				m_mouseNewState[m] = (inBuf[i].Event.MouseEvent.dwButtonState & (1 << m)) > 0;
+
+	//		}
+	//		break;
+
+	//		default:
+	//			break;
+	//		}
+	//	}
+	//	break;
+
+	//	default:
+	//		break;
+	//		// We don't care just at the moment
+	//	}
+	//}
+
+	//for (int m = 0; m < 5; m++)
+	//{
+	//	m_mouse[m].bPressed = false;
+	//	m_mouse[m].bReleased = false;
+
+	//	if (m_mouseNewState[m] != m_mouseOldState[m])
+	//	{
+	//		if (m_mouseNewState[m])
+	//		{
+	//			m_mouse[m].bPressed = true;
+	//			m_mouse[m].bHeld = true;
+	//		}
+	//		else
+	//		{
+	//			m_mouse[m].bReleased = true;
+	//			m_mouse[m].bHeld = false;
+	//		}
+	//	}
+
+	//	m_mouseOldState[m] = m_mouseNewState[m];
+	//}
+}
+//-----------------------------------------------------------------------------
+
 int olcConsoleGameEngine::Error(wchar_t *msg)
 {
 	wchar_t buf[256];
 	FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), buf, 256, NULL);
 	wprintf(L"[ERROR] %ls: %ls\n", msg, buf);
 
-	wstring txt(msg);
-	txt += wstring(L":\n") + wstring(buf);
+	std::wstring txt(msg);
+	txt += std::wstring(L":\n") + std::wstring(buf);
 	MessageBoxW(NULL, txt.c_str(), L"OLC Console Game Engine Error", MB_OK | MB_ICONERROR);
 	return -1;
 }
@@ -302,8 +383,8 @@ int olcConsoleGameEngine::ConstructConsole(int width, int height, int fontw, int
 	if(!GetConsoleScreenBufferInfo(m_hConsole, &csbi))
 		return Error(L"GetConsoleScreenBufferInfo");
 	//-- Re-scale the buffer and window if we've exceeded the high-end limit
-	if(m_nScreenHeight > csbi.dwMaximumWindowSize.Y
-			or m_nScreenWidth > csbi.dwMaximumWindowSize.X)
+	if(m_nScreenHeight > csbi.dwMaximumWindowSize.Y ||
+	   m_nScreenWidth  > csbi.dwMaximumWindowSize.X)
 	{
 		m_nScreenHeight = m_nScreenHeight > csbi.dwMaximumWindowSize.Y
 						? csbi.dwMaximumWindowSize.Y : m_nScreenHeight;
@@ -316,7 +397,7 @@ int olcConsoleGameEngine::ConstructConsole(int width, int height, int fontw, int
 	}
 
 	//-- 6. Set Console Window Size
-	m_rectWindow = { 0, 0, m_nScreenWidth - 1, m_nScreenHeight - 1 };
+	m_rectWindow = { 0, 0, SHORT(m_nScreenWidth - 1), SHORT(m_nScreenHeight - 1) };
 	if(!SetConsoleWindowInfo(m_hConsole, TRUE, &m_rectWindow))
 		return Error(L"SetConsoleWindowInfo");
 
@@ -326,7 +407,7 @@ int olcConsoleGameEngine::ConstructConsole(int width, int height, int fontw, int
 
 void olcConsoleGameEngine::Draw(int x, int y, wchar_t c, short col)
 {
-	if (x >= 0 and x < m_nScreenWidth and y >= 0 and y < m_nScreenHeight)
+	if (x >= 0 && x < m_nScreenWidth && y >= 0 && y < m_nScreenHeight)
 	{
 		m_bufScreen[y * m_nScreenWidth + x].Char.UnicodeChar = c;
 		m_bufScreen[y * m_nScreenWidth + x].Attributes = col;
@@ -344,7 +425,7 @@ void olcConsoleGameEngine::Fill(int x1, int y1, int x2, int y2, wchar_t c, short
 }
 //-----------------------------------------------------------------------------
 
-void olcConsoleGameEngine::DrawString(int x, int y, wstring c, short col)
+void olcConsoleGameEngine::DrawString(int x, int y, std::wstring c, short col)
 {
 	for(size_t i = 0; i < c.size(); ++i)
 	{
@@ -354,7 +435,7 @@ void olcConsoleGameEngine::DrawString(int x, int y, wstring c, short col)
 }
 //-----------------------------------------------------------------------------
 
-void olcConsoleGameEngine::DrawStringAlpha(int x, int y, wstring c, short col)
+void olcConsoleGameEngine::DrawStringAlpha(int x, int y, std::wstring c, short col)
 {
 	for(size_t i = 0; i < c.size(); ++i)
 	{
@@ -408,7 +489,7 @@ void olcConsoleGameEngine::DrawLine(int x1, int y1, int x2, int y2, wchar_t c, s
 				px = px + 2 * dy1;
 			else
 			{
-				if((dx < 0 and dy < 0) or (dx > 0 and dy > 0))
+				if((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
 					y = y + 1;
 				else
 					y = y - 1;
@@ -440,7 +521,7 @@ void olcConsoleGameEngine::DrawLine(int x1, int y1, int x2, int y2, wchar_t c, s
 				py = py + 2 * dx1;
 			else
 			{
-				if((dx < 0 and dy < 0) or (dx > 0 and dy > 0))
+				if((dx < 0 && dy < 0) || (dx > 0 && dy > 0))
 					x = x + 1;
 				else
 					x = x - 1;
@@ -488,9 +569,9 @@ void olcConsoleGameEngine::Start()
 {
 	m_bAtomActive = true;
 	// Start the thread
-	thread t = thread(&olcConsoleGameEngine::GameThread, this);
+	std::thread t = std::thread(&olcConsoleGameEngine::GameThread, this);
 	// Wait for thread to be exited
-	auto lck = unique_lock<mutex>(m_muxGame);
+	auto lck = std::unique_lock<std::mutex>(m_muxGame);
 	m_cvGameFinished.wait(lck);
 	// Tidy up
 	t.join();
