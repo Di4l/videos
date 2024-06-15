@@ -19,11 +19,6 @@
 #include <list>
 #include <thread>
 //-----------------------------------------------------------------------------
-#include <filesystem>
-
-#define S2WS(x)		std::filesystem::path(x).wstring()
-#define WS2S(x)		std::filesystem::path(x).string()
-//-----------------------------------------------------------------------------
 
 void olcSprite::Create(int w, int h)
 {

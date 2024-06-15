@@ -74,8 +74,12 @@ See my other videos for examples!
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-//#include <chrono>
+//-----------------------------------------------------------------------------
+#include <filesystem>
 
+#define S2WS(x)		std::filesystem::path(x).wstring()
+#define WS2S(x)		std::filesystem::path(x).string()
+//-----------------------------------------------------------------------------
 #include <windows.h>
 //-----------------------------------------------------------------------------
 
