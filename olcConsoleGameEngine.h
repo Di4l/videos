@@ -130,15 +130,17 @@ enum PIXEL_TYPE
 class olcSprite
 {
 private:
-	wchar_t *m_Glyphs  = nullptr;
-	short   *m_Colours = nullptr;
+	wchar_t* m_Glyphs  = nullptr;
+	short*   m_Colours = nullptr;
 
 	void Create(int w, int h);
+	void Destroy();
 
 public:
 	olcSprite()	                  {}
 	olcSprite(int w, int h)       { Create(w, h); }
 	olcSprite(std::wstring sFile) { if(!Load(sFile)) Create(8, 8); }
+	~olcSprite();
 
 	int nWidth = 0;
 	int nHeight = 0;

@@ -20,17 +20,33 @@
 #include <thread>
 //-----------------------------------------------------------------------------
 
+olcSprite::~olcSprite()
+{
+	Destroy();
+}
+//-----------------------------------------------------------------------------
+
 void olcSprite::Create(int w, int h)
 {
 	nWidth    = w;
 	nHeight   = h;
-	m_Glyphs  = new wchar_t[w * h];
-	m_Colours = new short[w * h];
+	m_Glyphs  = new wchar_t[size_t(w * h)];
+	m_Colours = new short[size_t(w * h)];
 	for(int i = 0; i < w * h; ++i)
 	{
 		m_Glyphs[i]  = L' ';
 		m_Colours[i] = FG_BLACK;
 	}
+}
+//-----------------------------------------------------------------------------
+
+void olcSprite::Destroy()
+{
+	if (m_Glyphs)  delete[] m_Glyphs;
+	if (m_Colours) delete[] m_Colours;
+
+	m_Glyphs = nullptr;
+	m_Colours = nullptr;
 }
 //-----------------------------------------------------------------------------
 
@@ -76,10 +92,10 @@ bool olcSprite::Save(std::wstring sFile)
 	std::ofstream f;
 	f.open(aux.c_str(), std::ios_base::binary);
 
-	f.write((char*)&nWidth, sizeof(int));
+	f.write((char*)&nWidth,  sizeof(int));
 	f.write((char*)&nHeight, sizeof(int));
-	f.write((char*)m_Colours, sizeof(short) * nWidth * nHeight);
-	f.write((char*)m_Glyphs, sizeof(wchar_t) * nWidth * nHeight);
+	f.write((char*)m_Colours, sizeof(short)   * nWidth * nHeight);
+	f.write((char*)m_Glyphs,  sizeof(wchar_t) * nWidth * nHeight);
 
 	f.close();
 	return true;
@@ -88,8 +104,7 @@ bool olcSprite::Save(std::wstring sFile)
 
 bool olcSprite::Load(std::wstring sFile)
 {
-	delete[] m_Glyphs;
-	delete[] m_Colours;
+	Destroy();
 	nWidth = 0;
 	nHeight = 0;
 
@@ -97,12 +112,12 @@ bool olcSprite::Load(std::wstring sFile)
 	std::ifstream f;
 	f.open(aux.c_str(), std::ios_base::binary | std::ios_base::trunc);
 
-	f.read((char*)&nWidth, sizeof(int));
+	f.read((char*)&nWidth,  sizeof(int));
 	f.read((char*)&nHeight, sizeof(int));
 	Create(nWidth, nHeight);
 
-	f.read((char*)m_Colours, sizeof(short) * nWidth * nHeight);
-	f.read((char*)m_Glyphs, sizeof(wchar_t) * nWidth * nHeight);
+	f.read((char*)m_Colours, sizeof(short)   * nWidth * nHeight);
+	f.read((char*)m_Glyphs,  sizeof(wchar_t) * nWidth * nHeight);
 
 	f.close();
 	return true;
